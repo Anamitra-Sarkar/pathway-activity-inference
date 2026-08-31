@@ -13,6 +13,32 @@
 
 * { box-sizing: border-box; }
 
+.hero-banner {
+  width: 100%;
+  max-height: 320px;
+  overflow: hidden;
+  background: #0f172a;
+  border-bottom: 1px solid #1e293b;
+}
+
+.hero-image {
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hero-banner {
+    max-height: 200px;
+  }
+  .hero-image {
+    max-height: 200px;
+  }
+}
+
 .header {
   background: linear-gradient(135deg, #1e293b 0%, #334155 60%, #2563eb 100%);
   color: white;

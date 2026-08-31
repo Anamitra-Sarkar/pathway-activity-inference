@@ -226,6 +226,13 @@ export default function App() {
   return (
     <div>
       <a href="#main-content" className="skip-link">Skip to main content</a>
+      <div className="hero-banner">
+        <img
+          src="/hero.png"
+          alt="Scientific illustration of interconnected biological pathways, gene expression networks, and molecular signaling cascades within a cell"
+          className="hero-image"
+        />
+      </div>
       <div className="header" role="banner">
         <h1>Pathway Activity Dashboard — ssGSEA (Barbie 2009) · Combined z-score (Lee 2008)</h1>
         <p>
