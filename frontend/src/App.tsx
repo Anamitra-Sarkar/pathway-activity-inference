@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react'
-import { scoreBoth, differential } from './api/client'
+import { scoreBoth, differential, getApiBase } from './api/client'
+
+const API_BASE = getApiBase()
 
 // Small default fixtures for demo (mirrors tests: injected signal)
 const DEFAULT_GENE_SETS: Record<string, string[]> = {
@@ -206,12 +208,12 @@ export default function App() {
 
   const checkHealth = async () => {
     try {
-      const r = await fetch('/health')
+      const r = await fetch(`${API_BASE}/health`)
       const j = await r.json()
       setHealth(j)
     } catch {
-      // fallback to direct backend
-      try { const r = await fetch('http://localhost:8000/health'); const j = await r.json(); setHealth(j) } catch {}
+      // fallback: try relative health if API_BASE was absolute and failed
+      try { const r = await fetch('/health'); const j = await r.json(); setHealth(j) } catch {}
     }
   }
 

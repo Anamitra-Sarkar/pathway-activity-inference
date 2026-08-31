@@ -1,0 +1,31 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Release gate — fail-closed by default (safe default: curated endpoints return 403).
+      # Scoring endpoints (/api/v1/score/*) remain available without the gate.
+      # To enable curated artifact endpoints, set:
+      #   MODEL_RELEASE_APPROVED=true
+      #   APPROVED_ARTIFACT_REVISION=<git SHA or version string, e.g. v1.0.0-abc123>
+      # Do NOT enable in development unless you have validated the curated artifact.
+      - MODEL_RELEASE_APPROVED=${MODEL_RELEASE_APPROVED:-false}
+      - APPROVED_ARTIFACT_REVISION=${APPROVED_ARTIFACT_REVISION:-}
+      # Firebase auth (optional)
+      # - Set FIREBASE_SERVICE_ACCOUNT_JSON to a mounted path containing the service account JSON.
+      # - Set FIREBASE_AUTH_DISABLED=true only for local dev (explicit opt-in, bypasses token verification).
+      - FIREBASE_SERVICE_ACCOUNT_JSON=${FIREBASE_SERVICE_ACCOUNT_JSON:-}
+      - FIREBASE_AUTH_DISABLED=${FIREBASE_AUTH_DISABLED:-false}
+    # Uncomment to enable auth bypass for local dev only:
+    # environment:
+    #   - FIREBASE_AUTH_DISABLED=true
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health', timeout=4).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
