@@ -110,13 +110,19 @@ def ssgsea_scores(
                  This function expects samples as rows, genes as columns.
                  If you have genes as rows, transpose before calling.
         gene_sets: dict pathway_name -> {\"genes\": [...]} OR pathway_name -> list of genes.
-        alpha: weighting exponent.
+        alpha: weighting exponent, must be >0 and <=5.
 
     Returns:
         DataFrame samples x pathways (index same as expr_df.index, columns pathway names).
     """
     if expr_df.empty:
         raise ValueError("Expression matrix is empty")
+    if not isinstance(alpha, (int, float)) or not 0 < alpha <= 5:
+        raise ValueError(f"alpha must be in (0, 5], got {alpha}")
+    if not isinstance(gene_sets, dict) or len(gene_sets) == 0:
+        raise ValueError("gene_sets must be non-empty dict")
+    if expr_df.isna().all().all():
+        raise ValueError("Expression matrix contains only NaN")
 
     # Normalize gene_sets to dict name -> set
     normalized: dict[str, set] = {}

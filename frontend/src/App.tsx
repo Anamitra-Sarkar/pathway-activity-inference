@@ -225,12 +225,13 @@ export default function App() {
 
   return (
     <div>
-      <div className="header">
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+      <div className="header" role="banner">
         <h1>Pathway Activity Dashboard — ssGSEA (Barbie 2009) · Combined z-score (Lee 2008)</h1>
         <p>
           Context-specific pathway activity inference from expression. Paste a matrix (samples × genes), provide gene sets (GMT-style or JSON), compute per-sample ssGSEA and z-score activity, view ranked differential activity (Wilcoxon + BH-FDR) and method agreement (Spearman/Pearson). Scoring runs ungated; curated artifact endpoints require <span className="code">MODEL_RELEASE_APPROVED=true</span>.
         </p>
-        <div className="meta">
+        <div className="meta" aria-label="Technology stack">
           <span className="badge">React + Vite + TypeScript</span>
           <span className="badge">FastAPI backend</span>
           <span className="badge">MSigDB Hallmark · Reactome GMT</span>
@@ -238,86 +239,95 @@ export default function App() {
         </div>
       </div>
 
-      <div className="container">
+      <main id="main-content" className="container">
         <div className="grid">
-          <div className="card">
-            <h2>1 · Expression matrix</h2>
-            <div className="muted">Paste CSV. Supports long (sample,gene,value) or wide (sample × gene). Demo has injected signal: IFN genes high in S1/S2.</div>
-            <div style={{ display: 'flex', gap: 8, margin: '8px 0' }}>
-              <select value={format} onChange={e=>setFormat(e.target.value as any)} style={{ width: 140 }}>
+          <div className="card" aria-labelledby="expr-heading">
+            <h2 id="expr-heading">1 · Expression matrix</h2>
+            <div className="muted" id="expr-help">Paste CSV. Supports long (sample,gene,value) or wide (sample × gene). Demo has injected signal: IFN genes high in S1/S2.</div>
+            <div style={{ display: 'flex', gap: 8, margin: '8px 0', flexWrap: 'wrap' }}>
+              <label htmlFor="format-select" className="sr-only">Expression format</label>
+              <select id="format-select" aria-label="Expression format" value={format} onChange={e=>setFormat(e.target.value as any)} style={{ width: 160 }}>
                 <option value="long">Long format</option>
                 <option value="wide">Wide (samples × genes)</option>
               </select>
-              <button className="btn ghost" onClick={checkHealth}>Check /health</button>
+              <button type="button" className="btn ghost" onClick={checkHealth} aria-label="Check backend health endpoint">Check /health</button>
             </div>
-            <textarea rows={10} value={exprText} onChange={e=>setExprText(e.target.value)} placeholder="sample,gene,value" />
-            <h3>Sample groups (sample,group per line)</h3>
-            <textarea rows={4} value={groupsText} onChange={e=>setGroupsText(e.target.value)} />
-            {health && <pre className="muted" style={{ background: '#f1f5f9', padding: 8, borderRadius: 8, marginTop: 8, overflow: 'auto' }}>{JSON.stringify(health, null, 2)}</pre>}
+            <label htmlFor="expr-textarea" className="sr-only">Expression matrix CSV</label>
+            <textarea id="expr-textarea" aria-describedby="expr-help" rows={10} value={exprText} onChange={e=>setExprText(e.target.value)} placeholder="sample,gene,value" aria-label="Expression matrix CSV input" />
+            <label htmlFor="groups-textarea"><h3 style={{ margin: '14px 0 8px', fontSize: 13 }}>Sample groups (sample,group per line)</h3></label>
+            <textarea id="groups-textarea" rows={4} value={groupsText} onChange={e=>setGroupsText(e.target.value)} aria-label="Sample groups mapping" placeholder="S1,A&#10;S2,A&#10;S3,B&#10;S4,B" />
+            {health && <pre className="muted" role="status" aria-live="polite" style={{ background: '#f1f5f9', padding: 8, borderRadius: 8, marginTop: 8, overflow: 'auto', maxHeight: 200 }}>{JSON.stringify(health, null, 2)}</pre>}
           </div>
 
-          <div className="card">
-            <h2>2 · Gene sets (GMT / JSON)</h2>
-            <div className="muted">JSON: {"{ pathway: [genes] }"} • Or upload GMT file to backend via <span className="code">--gmt-path</span>. Uses MSigDB Hallmark (50) or Reactome GMT.</div>
-            <textarea rows={14} value={geneSetsText} onChange={e=>setGeneSetsText(e.target.value)} />
-            <div style={{ display:'flex', gap:8, marginTop:10 }}>
-              <button className="btn" onClick={run} disabled={loading || !parsedGeneSets}>
+          <div className="card" aria-labelledby="geneset-heading">
+            <h2 id="geneset-heading">2 · Gene sets (GMT / JSON)</h2>
+            <div className="muted" id="geneset-help">JSON: {"{ pathway: [genes] }"} • Or upload GMT file to backend via <span className="code">--gmt-path</span>. Uses MSigDB Hallmark (50) or Reactome GMT.</div>
+            <label htmlFor="geneset-textarea" className="sr-only">Gene sets JSON</label>
+            <textarea id="geneset-textarea" aria-describedby="geneset-help" rows={14} value={geneSetsText} onChange={e=>setGeneSetsText(e.target.value)} aria-label="Gene sets JSON input" aria-invalid={!parsedGeneSets} />
+            <div style={{ display:'flex', gap:8, marginTop:10, flexWrap:'wrap' }}>
+              <button type="button" className="btn" onClick={run} disabled={loading || !parsedGeneSets} aria-busy={loading} aria-label={loading ? "Scoring in progress" : "Run scoring for ssGSEA and z-score"}>
                 {loading ? 'Scoring…' : 'Run ssGSEA + z-score'}
               </button>
-              <button className="btn secondary" onClick={()=>{setGeneSetsText(JSON.stringify(DEFAULT_GENE_SETS,null,2)); setExprText(DEFAULT_EXPRESSION_CSV); setGroupsText('S1,A\nS2,A\nS3,B\nS4,B')}}>Reset demo</button>
+              <button type="button" className="btn secondary" onClick={()=>{setGeneSetsText(JSON.stringify(DEFAULT_GENE_SETS,null,2)); setExprText(DEFAULT_EXPRESSION_CSV); setGroupsText('S1,A\nS2,A\nS3,B\nS4,B')}} aria-label="Reset to demo data">Reset demo</button>
             </div>
-            {!parsedGeneSets && <div className="alert error" style={{marginTop:8}}>Invalid JSON</div>}
-            {error && <div className="alert error" style={{marginTop:8}}>{error}</div>}
+            {!parsedGeneSets && <div className="alert error" role="alert" style={{marginTop:8}}>Invalid JSON — check gene sets syntax</div>}
+            {error && <div className="alert error" role="alert" aria-live="assertive" style={{marginTop:8}}>{error}</div>}
+            {loading && <div className="alert info" role="status" aria-live="polite" style={{marginTop:8}}>Scoring… please wait</div>}
             <div className="muted" style={{marginTop:8}}>Scoring endpoints are <b>ungated</b> (deterministic stats). Curated endpoints (<span className="code">/api/v1/curated/*</span>) require <span className="code">MODEL_RELEASE_APPROVED=true</span> + <span className="code">APPROVED_ARTIFACT_REVISION</span>.</div>
           </div>
         </div>
 
         {result && (
           <>
-            <div className="card" style={{ marginTop: 16 }}>
-              <h2>Correlation — ssGSEA vs z-score (per pathway)</h2>
-              <div className="muted">Spearman and Pearson per pathway quantify method agreement on this cohort.</div>
-              <table className="table" style={{ marginTop: 8 }}>
-                <thead><tr><th>Pathway</th><th>Spearman r</th><th>Pearson r</th><th>n</th></tr></thead>
+            <div className="card" style={{ marginTop: 16 }} aria-labelledby="corr-heading">
+              <h2 id="corr-heading">Correlation — ssGSEA vs z-score (per pathway)</h2>
+              <div className="muted" id="corr-help">Spearman and Pearson per pathway quantify method agreement on this cohort.</div>
+              <div style={{ overflowX: 'auto' }}>
+              <table className="table" style={{ marginTop: 8 }} aria-describedby="corr-help">
+                <caption className="sr-only">Correlation between ssGSEA and z-score per pathway</caption>
+                <thead><tr><th scope="col">Pathway</th><th scope="col">Spearman r</th><th scope="col">Pearson r</th><th scope="col">n</th></tr></thead>
                 <tbody>
                   {result.correlation?.map((c:any)=>(
                     <tr key={c.pathway}>
                       <td><b>{c.pathway}</b></td>
-                      <td>{c.spearman_r?.toFixed(3)}</td>
-                      <td>{c.pearson_r?.toFixed(3)}</td>
+                      <td>{c.spearman_r != null ? c.spearman_r.toFixed(3) : '—'}</td>
+                      <td>{c.pearson_r != null ? c.pearson_r.toFixed(3) : '—'}</td>
                       <td>{c.n_samples}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
 
             <div className="grid" style={{ marginTop: 16 }}>
-              <div className="card">
-                <h2>Top differentially active pathways</h2>
-                <div className="muted">Wilcoxon rank-sum per pathway (group B vs A) + BH-FDR. Bar is -log10(q).</div>
+              <div className="card" aria-labelledby="diff-heading">
+                <h2 id="diff-heading">Top differentially active pathways</h2>
+                <div className="muted" id="diff-help">Wilcoxon rank-sum per pathway (group B vs A) + BH-FDR. Bar is -log10(q).</div>
                 {diff ? (
                   <>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }} role="list" aria-label="Top pathways by significance">
                       {topPathways.map((d:any)=>{
                         const q = d.q_value || 1
                         const neglog = q>0 ? Math.min(6, -Math.log10(q)) : 6
                         const width = (neglog/6)*100
                         return (
-                          <div key={d.pathway}>
+                          <div key={d.pathway} role="listitem">
                             <div style={{ display:'flex', justifyContent:'space-between', fontSize:11 }}>
                               <b>{d.pathway}</b>
                               <span className="muted">Δ {d.delta?.toFixed(2)} · q {q.toExponential(1)}</span>
                             </div>
-                            <div style={{ background:'#e2e8f0', borderRadius:999, height:14, marginTop:4, overflow:'hidden' }}>
+                            <div style={{ background:'#e2e8f0', borderRadius:999, height:14, marginTop:4, overflow:'hidden' }} role="progressbar" aria-valuenow={Math.round(neglog*10)/10} aria-valuemin={0} aria-valuemax={6} aria-label={`${d.pathway} -log10 q ${neglog.toFixed(1)}`}>
                               <div className="bar" style={{ width:`${width}%`, height:'100%' }} />
                             </div>
                           </div>
                         )
                       })}
                     </div>
-                    <table className="table" style={{ marginTop: 12 }}>
-                      <thead><tr><th>Pathway</th><th>Mean A</th><th>Mean B</th><th>Δ</th><th>p</th><th>q</th></tr></thead>
+                    <div style={{ overflowX: 'auto' }}>
+                    <table className="table" style={{ marginTop: 12 }} aria-describedby="diff-help">
+                      <caption className="sr-only">Differential pathway activity results</caption>
+                      <thead><tr><th scope="col">Pathway</th><th scope="col">Mean A</th><th scope="col">Mean B</th><th scope="col">Δ</th><th scope="col">p</th><th scope="col">q</th></tr></thead>
                       <tbody>
                         {diff.map((d:any)=>(
                           <tr key={d.pathway}>
@@ -326,18 +336,19 @@ export default function App() {
                             <td>{d.mean_B?.toFixed(2)}</td>
                             <td style={{ color: d.delta>0 ? '#059669' : '#dc2626', fontWeight:700 }}>{d.delta?.toFixed(2)}</td>
                             <td>{d.p_value?.toExponential(1)}</td>
-                            <td><span className={`pill ${d.q_value < 0.05 ? 'sig' : 'ns'}`}>{d.q_value?.toExponential(1)}</span></td>
+                            <td><span className={`pill ${d.q_value < 0.05 ? 'sig' : 'ns'}`} aria-label={d.q_value < 0.05 ? "significant" : "not significant"}>{d.q_value?.toExponential(1)}</span></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   </>
-                ) : <div className="muted">No groups supplied or groups not distinct.</div>}
+                ) : <div className="muted" role="status">No groups supplied or groups not distinct.</div>}
               </div>
 
-              <div className="card">
-                <h2>Per-sample pathway activity (ssGSEA)</h2>
-                <div className="muted">Heatmap (blue→low, red→high). Z-score view available via toggle in API response.</div>
+              <div className="card" aria-labelledby="heatmap-heading">
+                <h2 id="heatmap-heading">Per-sample pathway activity (ssGSEA)</h2>
+                <div className="muted" id="heatmap-help">Heatmap (blue→low, red→high). Z-score view available via toggle in API response.</div>
                 {result.ssgsea && (()=> {
                   const samples = result.samples as string[]
                   const pathways = result.pathways as string[]
@@ -355,19 +366,24 @@ export default function App() {
                   }
                   return (
                     <>
-                      <div style={{ display:'grid', gridTemplateColumns:`120px repeat(${samples.length},1fr)`, gap:4, fontSize:11, marginTop:8 }}>
-                        <div></div>
-                        {samples.map(s=> <div key={s} style={{ textAlign:'center', fontWeight:700, fontSize:10 }}>{s}</div>)}
+                      <div style={{ display:'grid', gridTemplateColumns:`120px repeat(${samples.length},1fr)`, gap:4, fontSize:11, marginTop:8 }} role="grid" aria-label="ssGSEA heatmap" aria-describedby="heatmap-help">
+                        <div role="columnheader" aria-hidden="true"></div>
+                        {samples.map(s=> <div key={s} role="columnheader" style={{ textAlign:'center', fontWeight:700, fontSize:10 }}>{s}</div>)}
                         {pathways.map(p=> (
                           <React.Fragment key={p}>
-                            <div style={{ fontWeight:600, fontSize:10, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p}</div>
+                            <div role="rowheader" style={{ fontWeight:600, fontSize:10, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{p}</div>
                             {samples.map(s=> {
                               const v = scores[s][p]
-                              return <div key={s} className="heat-cell" style={{ background: color(v) }} title={`${v.toFixed(2)}`}>{v.toFixed(1)}</div>
+                              return <div key={`${p}-${s}`} role="gridcell" aria-label={`${p} ${s} ${v.toFixed(2)}`} className="heat-cell" style={{ background: color(v) }} title={`${p} ${s}: ${v.toFixed(2)}`}>{v.toFixed(1)}</div>
                             })}
                           </React.Fragment>
                         ))}
                       </div>
+                      {/* Accessible table alternative for screen readers */}
+                      <table className="sr-only" aria-label="ssGSEA scores table alternative">
+                        <thead><tr><th>Pathway / Sample</th>{samples.map(s=> <th key={s}>{s}</th>)}</tr></thead>
+                        <tbody>{pathways.map(p=> <tr key={p}><th>{p}</th>{samples.map(s=> <td key={s}>{scores[s][p].toFixed(2)}</td>)}</tr>)}</tbody>
+                      </table>
                       <div className="stat-row" style={{ marginTop: 12 }}>
                         <div className="stat"><div className="label">Samples</div><div className="value">{samples.length}</div></div>
                         <div className="stat"><div className="label">Pathways</div><div className="value">{pathways.length}</div></div>
@@ -381,10 +397,10 @@ export default function App() {
           </>
         )}
 
-        <div className="muted" style={{ textAlign:'center', marginTop: 20 }}>
+        <div className="muted" style={{ textAlign:'center', marginTop: 20 }} role="contentinfo">
           Citations: Barbie et al. Nature 2009 (ssGSEA) · Lee et al. PLoS Comp Biol 2008 (combined z-score) · Subramanian et al. PNAS 2005 (GSEA) · Hänzelmann et al. BMC Bioinf 2013 (GSVA). Data sources: MSigDB Hallmark (gsea-msigdb.org, 50 hallmarks, non-commercial) · Reactome (reactome.org/download-data, CC BY 4.0). Synthetic fixture below validates pipeline recovers injected signal; not a biological finding.
         </div>
-      </div>
+      </main>
     </div>
   )
 }

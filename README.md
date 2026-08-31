@@ -38,7 +38,7 @@ cd frontend && npm install && npm run dev  # proxies /api → :8000
 Tests use small synthetic fixtures (injected IFN genes high in group A) to verify correctness — honest verification, not a biological finding.
 
 ```bash
-pytest -q   # 34 tests: GMT, ssGSEA/zscore correctness, injected-signal recovery, BH, correlation, gate+auth
+pytest -q   # 69 tests: GMT (+BOM/comments/CRLF edge cases), ssGSEA/zscore correctness, injected-signal recovery, BH, correlation, gate+auth, validation 422/400
 ```
 
 ## Structure

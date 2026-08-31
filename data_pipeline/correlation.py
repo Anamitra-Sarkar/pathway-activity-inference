@@ -26,6 +26,10 @@ def correlate_methods(
             pearson_r, pearson_p, spearman_r, spearman_p, n_samples
         If method != both, still returns all but caller can filter.
     """
+    if method not in ("pearson", "spearman", "both"):
+        raise ValueError(f"method must be 'pearson', 'spearman', or 'both', got '{method}'")
+    if scores_a.empty or scores_b.empty:
+        raise ValueError("Score matrices must be non-empty")
     # Align
     common_samples = scores_a.index.intersection(scores_b.index)
     if len(common_samples) == 0:
